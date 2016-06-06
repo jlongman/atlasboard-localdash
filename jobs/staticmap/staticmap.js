@@ -26,7 +26,7 @@
 
  * zoom if unset google decides zoom
  */
-var bixi2sm = require('./bixitostaticmap');
+
 module.exports = {
 
   /**
@@ -79,9 +79,6 @@ module.exports = {
 
      Checking for the right configuration could be something like this:
      */
-    if (!config.city) {
-      return jobCallback('missing size, e.g. 640x640! (Note larger only available with Google API key)');
-    }
     if (!config.lat) {
       return jobCallback('missing latitude(config.lat)! ');
     }
@@ -100,43 +97,53 @@ module.exports = {
      Have a look at test/staticmap for an example of how to unit tests this easily by mocking easyRequest calls
 
      */
+    function theme_map() {
+      var SP = require('./snazzythemetostaticmap');
+      var look = require('./themes/' + config.theme);
 
-    var bixiurl = bixi2sm.cities[config.city].url;
-    if (config.url) {
-      bixiurl = config.url;
+      var lookurl = "";
+      if (!SP.look_cache[lookurl]) {
+        SP.StaticParams.parse(look.lookjson);
+        SP.look_cache[lookurl] = SP.StaticParams.get();
+      }
+      return SP.look_cache[lookurl];
     }
 
-    dependencies.easyRequest.HTML(bixiurl, function (err, json) {
-      var size = "640x640";
-      if (config.size) {
-        size = config.size;
-      }
-      var url = "http://maps.googleapis.com/maps/api/staticmap?" +
-        "center=" + config.lat + "," + config.lon +
-        "&size=" + size;
-      if (config.apikey) {
-        url += "&key=" + config.apikey;
-      }
-      if (config.zoom) {
-        url += "&zoom=" + config.zoom;
-      }
-      url += "&markers=color:green|label:X|" + config.lat + "," + config.lon + "";
+    var size = "640x640";
+    if (config.size) {
+      size = config.size;
+    }
+    var url = "http://maps.googleapis.com/maps/api/staticmap?" +
+      "center=" + config.lat + "," + config.lon +
+      "&size=" + size;
+    if (config.globalAuth && config.globalAuth.staticmap && config.globalAuth.staticmap.apikey) {
+      url += "&key=" + config.globalAuth.staticmap.apikey;
+    }
+    if (config.zoom) {
+      url += "&zoom=" + config.zoom;
+    }
+    url += "&markers=color:green|label:X|" + config.lat + "," + config.lon + "";
 
-      url += bixi2sm.bixijson_to_static_map(config, json);
-
-      if (config.theme) {
-        var SP = require('./snazzythemetostaticmap');
-        var look = require('./themes/' + config.theme);
-
-        var lookurl = "";
-        if (!SP.look_cache[lookurl]) {
-          SP.StaticParams.parse(look.lookjson);
-          SP.look_cache[lookurl] = SP.StaticParams.get();
+    var err = null;
+    if (config.city) {
+      var bixi2sm = require('./bixitostaticmap');
+      var bixiurl = bixi2sm.cities[config.city].url;
+      if (config.url) {
+        bixiurl = config.url;
+      }
+      dependencies.easyRequest.HTML(bixiurl, function (err, json) {
+        url += bixi2sm.bixijson_to_static_map(config, json);
+        if (config.theme) {
+          url += theme_map();
         }
-        url += SP.look_cache[lookurl];
+        // console.log(url);
+        jobCallback(err, {title: config.widgetTitle, url: url});
+      });
+    } else {
+      if (config.theme) {
+        url += theme_map();
       }
-      // console.log(url);
       jobCallback(err, {title: config.widgetTitle, url: url});
-    });
+    }
   }
 };

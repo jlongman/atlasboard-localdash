@@ -25,14 +25,13 @@ The `jobs` code has the bike sharing-parsing portion and theming portion separab
  
   OPTIONAL
 ```javascript
-     "key" : "YourGoogleAPIKey",
      "limit": 600,
      "count": 20,
      "size": "640x640",
      "zoom": 16,
      "theme": "midnightcommander"
 ```
-`key` see Googles Static Maps [Usage Limits](https://developers.google.com/maps/documentation/static-maps/usage-limits)
+
 
 `limit` is the distance in meters from the `lat` and `lon` position.
 
@@ -43,6 +42,17 @@ The `jobs` code has the bike sharing-parsing portion and theming portion separab
 `zoom` is optional, but I find the default guess is pretty wide angle.
 
 `theme` is detailed below.
+
+#### Google Static Maps API Key
+
+Adding a Static Maps API Key permits access to higher resolution and more features, at a premium.  It also permits them to track by API key instead of by IP address.  It is mandatory if you want a map larger than 640x640.
+
+In your `globalAuth.json` you should add:
+```javascript
+    "staticmap": {
+        "apikey" : "YourGoogleStaticMapAPIKey"
+    }
+```
 
 #### Theming
 
