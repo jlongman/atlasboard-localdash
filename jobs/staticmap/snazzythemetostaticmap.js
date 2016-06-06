@@ -1,5 +1,4 @@
 /**
- * Created by longman on 2016-06-01.
  * Originally from:
  *  http://stackoverflow.com/a/23154011/128165
  *  http://jsfiddle.net/s6Dyp/18/
