@@ -97,9 +97,9 @@ module.exports = {
      Have a look at test/staticmap for an example of how to unit tests this easily by mocking easyRequest calls
 
      */
-    function theme_map() {
+    function theme_map(theme) {
       var SP = require('./snazzythemetostaticmap');
-      var look = require('./themes/' + config.theme);
+      var look = require('./themes/' + theme);
 
       var lookurl = "";
       if (!SP.look_cache[lookurl]) {
@@ -113,7 +113,7 @@ module.exports = {
     if (config.size) {
       size = config.size;
     }
-    var url = "http://maps.googleapis.com/maps/api/staticmap?" +
+    var url = "https://maps.googleapis.com/maps/api/staticmap?" +
       "center=" + config.lat + "," + config.lon +
       "&size=" + size;
     if (config.globalAuth && config.globalAuth.staticmap && config.globalAuth.staticmap.apikey) {
@@ -133,15 +133,19 @@ module.exports = {
       }
       dependencies.easyRequest.HTML(bixiurl, function (err, json) {
         url += bixi2sm.bixijson_to_static_map(config, json);
-        if (config.theme) {
-          url += theme_map();
+        if (config.themeString) {
+          url += config.themeString;
+        } else if (config.theme) {
+          url += theme_map(config.theme);
         }
         // console.log(url);
         jobCallback(err, {title: config.widgetTitle, url: url});
       });
     } else {
-      if (config.theme) {
-        url += theme_map();
+      if (config.themeString) {
+        url += config.themeString;
+      } else if (config.theme) {
+        url += theme_map(config.theme);
       }
       jobCallback(err, {title: config.widgetTitle, url: url});
     }
