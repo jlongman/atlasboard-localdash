@@ -119,9 +119,12 @@ module.exports = {
       url += "&units=" + String(config.units);
     }
 
+    var mode = "driving";
     if (config.mode) {
-      url += "&mode=" + config.mode;
+      mode = config.mode;
     }
+    url += "&mode=" + mode;
+    
     dependencies.easyRequest.HTML(url, function (err, json) {
       // logger.trace(json);
       var results = JSON.parse(json);
@@ -133,7 +136,11 @@ module.exports = {
       if (config.destination) {
         widgetTitle += " - " + config.destination;
       }
-      jobCallback(err, {title: widgetTitle , text: message});
+      var datum = [{
+        "message": message,
+        "mode": config.mode
+      }];
+      jobCallback(err, {title: widgetTitle, modes: datum});
     });
   }
 };

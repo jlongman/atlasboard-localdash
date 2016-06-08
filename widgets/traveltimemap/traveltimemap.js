@@ -12,7 +12,7 @@ widget = {
       var datum = data.modes[i];
       $('.content', el).append(
         "<a class='img'>" +
-        "<img width='50px' src='/widgets/resources?resource=localdash/traveltimemap/mode_" + datum.mode + ".png'/>" +
+        "<img width='50px' src='/widgets/resources?resource=localdash/images/mode_" + datum.mode + ".png'/>" +
         "</a>" +
         "<div class='bd'>" +
         datum.text +
