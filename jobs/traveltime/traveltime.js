@@ -64,12 +64,19 @@ module.exports = {
      Checking for the right configuration could be something like this:
      */
 
-    if (!config.origin_lat || !config.origin_lon || !config.origin) {
-      return jobCallback('You must have origin_lan AND origin_lon, or an origin ');
+    if (!config.origin) {
+      if (!config.origin_lat || !config.origin_lon) {
+        return jobCallback('You must have origin_lan AND origin_lon, or an origin ');
+      }
+    }
+    if (!config.destination) {
+      if (!config.destination_lat || !config.destination_lon) {
+        return jobCallback('You must have destination_lan AND destination_lon, or an destination ');
+      }
     }
 
-    if (!config.destination_lat || !config.destination_lon || !config.destination) {
-      return jobCallback('You must have destination_lan AND destination_lon, or an destination ');
+    if (!config.globalAuth && !config.globalAuth.traveltime && !config.globalAuth.traveltime.apikey) {
+      return jobCallback('You must have config.globalAuth.traveltime.apikey defined');
     }
 
 
