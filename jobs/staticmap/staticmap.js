@@ -5,26 +5,42 @@
  * "mystaticmap": {
  *    "lat": 40.76727,
  *    "lon":-73.99392888,
- *    "city": "nyc"
- * }
- *
- * city values:
- *  montreal, ottawa, boston, chicago, nyc, toronto, columbus, chattanooga, sf
- *
- * OPTIONAL
- *    "key" : "YourGoogleAPIKey",
  *    "limit": 600,
  *    "count": 20,
+ *    "bixi": {
+ *      "city": "nyc"
+ *      "key" : "YourGoogleAPIKey",
+ *      "size": "640x640",
+ *      "zoom":16
+ *    },
+ *    "car2go": {
+ *      "key" : "YourCar2GoConsumerKey",
+ *      "loc" : "montreal"
+ *    }
+ * }
+ *
+ * lat centre of map
+ * lon centre of map
+ * limit is radial distance in meters
+ * count is the count-closest stations max
+ *
+ * bixi.city values:
+ *  montreal, ottawa, boston, chicago, nyc, toronto, columbus, chattanooga, sf
+ *
+ * bixi.* OPTIONAL
+ *    "key" : "YourGoogleAPIKey",
  *    "size": "640x640",
  *    "zoom":16
  *
- * key is the Google API Key, required for maps larger than 640x640
- * limit is radial distance in meters
- * count is the count-closest stations max
- * zoom is recommended at 16
- * size defaults to 640x640, the max available wihtout a Google API key
-
- * zoom if unset google decides zoom
+ * bixi.key is the Google API Key, required for maps larger than 640x640
+ * bixi.zoom is recommended at 16
+ * bixi.size defaults to 640x640, the max available wihtout a Google API key
+ * bixi.zoom if unset google decides zoom
+ *
+ * car2go.key is their oauth key
+ * car2go.loc is their city identifier
+ *
+ *
  */
 
 module.exports = {
@@ -113,6 +129,15 @@ module.exports = {
     if (config.size) {
       size = config.size;
     }
+    var limit = 600;
+    if (config.limit) {
+      limit = config.limit;
+    }
+    var count = 100;
+    if (config.count) {
+      count = config.count;
+    }
+
     var url = "https://maps.googleapis.com/maps/api/staticmap?" +
       "center=" + config.lat + "," + config.lon +
       "&size=" + size;
@@ -124,15 +149,19 @@ module.exports = {
     }
     url += "&markers=color:green|label:X|" + config.lat + "," + config.lon + "";
 
+
     var err = null;
-    if (config.city) {
+    if (config.bixi) {
+      config.bixi.lat = config.lat;
+      config.bixi.lon = config.lon;
+
       var bixi2sm = require('./bixitostaticmap');
-      var bixiurl = bixi2sm.cities[config.city].url;
-      if (config.url) {
-        bixiurl = config.url;
+      var bixiurl = bixi2sm.cities[config.bixi.city].url;
+      if (config.bixi.url) {
+        bixiurl = config.bixi.url; // hidden override
       }
       dependencies.easyRequest.HTML(bixiurl, function (err, json) {
-        url += bixi2sm.bixijson_to_static_map(config, json);
+        url += bixi2sm.bixijson_to_static_map(limit, count, config.bixi, json);
         if (config.themeString) {
           url += config.themeString;
         } else if (config.theme) {
