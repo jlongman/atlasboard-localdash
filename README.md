@@ -2,6 +2,10 @@
 
 A collection of tools relevant to locally-oriented dashboards.  This is intended to run as an [atlasboard](https://bitbucket.org/atlassian/atlasboard) submodule.
 
+<img src="https://cloud.githubusercontent.com/assets/1051995/15908916/0114c096-2d92-11e6-994e-0ac693b478e5.png" width="600"/>
+
+Note the shown dashboard includes [altlasboard-social](https://bitbucket.org/jlongman/atlasboard-social-package) for twitter, [atlasboard-weather](http://www.github.com/jlongman/atlasboard-weather/)  and a slightly modified `google-calendar` job/widget from the `atlasboard-demo` package. (top-right, bottom-middle and middle-right, respectively.)
+
 - [Staticmap](#staticmap)
 - [Traveltime](#traveltime)
 - [Traveltimemap](#traveltimemap)
