@@ -150,6 +150,9 @@ module.exports = {
           }
         }
       }
+      if (config.maptype) {
+        mapurl += "&maptype=" + config.maptype;
+      }
       if (quickmap) {
         mapurl += "&path=";
         if (config.travelcolor) {
@@ -179,8 +182,8 @@ module.exports = {
       var theme = "";
       if (config.themeString) {
         theme += config.themeString;
-        if (mapurl.length  + theme.length >= 2048) {
-          logger.warn("Long traveltimemap URL with theme : (" + mapurl.length + ", " + theme.length+ ") " + mapurl + theme);
+        if (mapurl.length + theme.length >= 2048) {
+          logger.warn("Long traveltimemap URL with theme : (" + mapurl.length + ", " + theme.length + ") " + mapurl + theme);
         } else {
           mapurl += theme;
         }

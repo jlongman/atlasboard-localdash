@@ -7,6 +7,7 @@
  *    "lon":-73.99392888,
  *    "limit": 600,
  *    "count": 20,
+ *    "maptype": "terrain",
  *    "bixi": {
  *      "city": "nyc"
  *      "apikey" : "YourGoogleAPIKey",
@@ -147,6 +148,10 @@ module.exports = {
     if (config.zoom) {
       url += "&zoom=" + config.zoom;
     }
+    if (config.maptype) {
+      url += "&maptype=" + config.maptype;
+    }
+
     url += "&markers=color:green|label:X|" + config.lat + "," + config.lon + "";
 
     if (config.car2go) {
@@ -169,8 +174,8 @@ module.exports = {
       } else if (config.theme) {
         theme = theme_map(config.theme);
       }
-      if (mapurllength  + theme.length >= 2048) {
-        logger.warn("Long staticmap URL with theme : (" + mapurllength + ", " + theme.length+ ") " + theme);
+      if (mapurllength + theme.length >= 2048) {
+        logger.warn("Long staticmap URL with theme : (" + mapurllength + ", " + theme.length + ") " + theme);
         theme = "";
       }
       return theme;
@@ -193,14 +198,14 @@ module.exports = {
             if (url.length >= 2048) {
               logger.error("Long staticmap URL: (" + url.length + ") " + url);
             }
-            url +=  append_theme_safe(url.length); 
+            url += append_theme_safe(url.length);
             jobCallback(err, {title: config.widgetTitle, url: url});
           });
         } else {
           if (url.length >= 2048) {
             logger.error("Long staticmap URL: (" + url.length + ") " + url);
           }
-          url +=  append_theme_safe(url.length); 
+          url += append_theme_safe(url.length);
           jobCallback(err, {title: config.widgetTitle, url: url});
         }
       });
@@ -211,14 +216,14 @@ module.exports = {
           if (url.length >= 2048) {
             logger.error("Long staticmap URL: (" + url.length + ") " + url);
           }
-          url +=  append_theme_safe(url.length); 
+          url += append_theme_safe(url.length);
           jobCallback(err, {title: config.widgetTitle, url: url});
         });
       } else {
         if (url.length >= 2048) {
           logger.error("Long staticmap URL: (" + url.length + ") " + url);
         }
-        url +=  append_theme_safe(url.length); 
+        url += append_theme_safe(url.length);
         jobCallback(err, {title: config.widgetTitle, url: url});
       }
     }
