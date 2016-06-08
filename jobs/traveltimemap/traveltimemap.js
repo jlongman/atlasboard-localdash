@@ -152,7 +152,9 @@ module.exports = {
       }
       if (quickmap) {
         mapurl += "&path=";
-        mapurl += "color:white|";
+        if (config.travelcolor) {
+          mapurl += "color:" + config.travelcolor + "|";
+        }
         mapurl += "enc:" + encodeURIComponent(results.routes[0].overview_polyline.points);
       } else {
         for (i = 0; i < results.routes[0].legs.length; i++) {
@@ -163,14 +165,25 @@ module.exports = {
             if (step.transit_details && step.transit_details.line.color) {
               mapurl += "color:0" + step.transit_details.line.color.replace("#", "x") + "|";
             } else {
-              mapurl += "color:white|";
+              if (config.travelcolor) {
+                mapurl += "color:" + config.travelcolor + "|";
+              }
             }
             mapurl += "enc:" + encodeURIComponent(step.polyline.points);
           }
         }
       }
+      if (mapurl.length >= 2048) {
+        logger.error("Long traveltimemap URL BEFORE theme: (" + mapurl.length + ") " + mapurl);
+      }
+      var theme = "";
       if (config.themeString) {
-        mapurl += config.themeString;
+        theme += config.themeString;
+        if (mapurl.length  + theme.length >= 2048) {
+          logger.warn("Long traveltimemap URL with theme : (" + mapurl.length + ", " + theme.length+ ") " + mapurl + theme);
+        } else {
+          mapurl += theme;
+        }
       }
       var linkurl = "https://maps.google.com/maps/dir/" +
         encodeURIComponent(results.routes[0].legs[0].start_address) + "/" +
