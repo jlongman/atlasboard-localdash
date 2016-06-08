@@ -188,8 +188,15 @@ module.exports = {
       var linkurl = "https://maps.google.com/maps/dir/" +
         encodeURIComponent(results.routes[0].legs[0].start_address) + "/" +
         encodeURIComponent(results.routes[0].legs[0].end_address);
-
-      jobCallback(err, {title: widgetTitle, text: message, mode: mode, mapurl: mapurl, linkurl: linkurl});
+      modes = [
+        {
+          "text": message,
+          "mode": mode,
+          "mapurl": mapurl,
+          "linkurl": linkurl
+        }
+      ]
+      jobCallback(err, {title: widgetTitle, modes: modes});
     });
   }
 };
