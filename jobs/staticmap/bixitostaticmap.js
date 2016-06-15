@@ -130,60 +130,61 @@ function bixijson_to_static_map(limit, count, config, json) {
       }
     }
   }
+  if (showstations.length > 0) {
+    // sort so that bikes with the same label are close to each other
+    // optimizes URL space
+    showstations = showstations.sort(function (a, b) {
+      return a.ba - b.ba;
+    });
 
-  // sort so that bikes with the same label are close to each other
-  // optimizes URL space
-  showstations = showstations.sort(function (a, b) {
-    return a.ba - b.ba;
-  });
-
-  if (!config.icon) {
-    var lastba = -1;
-    for (var i = 0; i < showstations.length && i < count; i++) {
-      var close = showstations[i];
-      var closeba = close[schema_bikes]
-      if (closeba != lastba && lastba < 10) {
-        lastba = closeba;
-        url += "&markers=color:"
-        if (closeba == 0) {
-          url += "gray|size=small|label:0";
-        } else {
-          if (closeba > 9) {
-            closeba = 9
+    if (!config.icon) {
+      var lastba = -1;
+      for (var i = 0; i < showstations.length && i < count; i++) {
+        var close = showstations[i];
+        var closeba = close[schema_bikes]
+        if (closeba != lastba && lastba < 10) {
+          lastba = closeba;
+          url += "&markers=color:"
+          if (closeba == 0) {
+            url += "gray|size=small|label:0";
+          } else {
+            if (closeba > 9) {
+              closeba = 9
+            }
+            url += "red|label:" + closeba;
           }
-          url += "red|label:" + closeba;
         }
+        url += "|" + distance.roundToMeter(close.coordinates[0]) + "," + distance.roundToMeter(close.coordinates[1]);
       }
-      url += "|" + distance.roundToMeter(close.coordinates[0]) + "," + distance.roundToMeter(close.coordinates[1]);
-    }
-  } else {
-    var lastba = -1;
-    for (var i = 0; i < showstations.length && i < count; i++) {
-      var close = showstations[i];
-      var closeba = close[schema_bikes]
-      if (closeba == 0) {
-        if (lastba < closeba) {
-          lastba = 0;
-          if (!config.icon.zero || config.icon.zero == "" || config.icon.zero == "default") {
-            url += "&markers=icon:" + "http://goo.gl/hE2Kxh";
-          } else {
-            url += "&markers=icon:" + config.icon.zero;
+    } else {
+      var lastba = -1;
+      for (var i = 0; i < showstations.length && i < count; i++) {
+        var close = showstations[i];
+        var closeba = close[schema_bikes]
+        if (closeba == 0) {
+          if (lastba < closeba) {
+            lastba = 0;
+            if (!config.icon.zero || config.icon.zero == "" || config.icon.zero == "default") {
+              url += "&markers=icon:" + "http://goo.gl/hE2Kxh";
+            } else {
+              url += "&markers=icon:" + config.icon.zero;
+            }
           }
-        }
-        url += "|" + distance.roundToMeter(close.coordinates[0]) + "," + distance.roundToMeter(close.coordinates[1]);
-      } else {
-        if (lastba < closeba) {
-          lastba = 0;
-          if (!config.icon.more || config.icon.more == "" || config.icon.more == "default") {
-            url += "&markers=icon:" + "http://goo.gl/BqFmO7";
-          } else {
-            url += "&markers=icon:" + config.icon.more;
+          url += "|" + distance.roundToMeter(close.coordinates[0]) + "," + distance.roundToMeter(close.coordinates[1]);
+        } else {
+          if (lastba < closeba) {
+            lastba = 0;
+            if (!config.icon.more || config.icon.more == "" || config.icon.more == "default") {
+              url += "&markers=icon:" + "http://goo.gl/BqFmO7";
+            } else {
+              url += "&markers=icon:" + config.icon.more;
+            }
+
           }
+          url += "|" + distance.roundToMeter(close.coordinates[0]) + "," + distance.roundToMeter(close.coordinates[1]);
+
 
         }
-        url += "|" + distance.roundToMeter(close.coordinates[0]) + "," + distance.roundToMeter(close.coordinates[1]);
-
-
       }
     }
   }

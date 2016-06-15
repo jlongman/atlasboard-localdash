@@ -132,23 +132,8 @@ module.exports = {
       count = config.count;
     }
 
-    var url = "https://maps.googleapis.com/maps/api/staticmap?" +
-      "center=" + config.lat + "," + config.lon +
-      "&size=" + size;
-    if (config.globalAuth && config.globalAuth.staticmap && config.globalAuth.staticmap.apikey) {
-      url += "&key=" + config.globalAuth.staticmap.apikey;
-    }
-    if (config.zoom) {
-      url += "&zoom=" + config.zoom;
-    }
-    if (config.maptype) {
-      url += "&maptype=" + config.maptype;
-    }
 
-    url += "&markers=color:green|" + config.lat + "," + config.lon + "";
-
-    var err = null;
-
+    var calls = [];
     function append_theme_safe(mapurllength) {
       var theme = "";
       if (config.themeString) {
@@ -164,71 +149,90 @@ module.exports = {
     }
 
 
-
-    function check_automobile() {
-      if (config.automobile) {
-        //https://www.reservauto.net/WCF/LSI/LSIBookingService.asmx/GetVehicleProposals?Callback=?&CustomerID=""&Latitude=0&Longitude=0
-        var automobileurl = "https://www.reservauto.net/WCF/LSI/LSIBookingService.asmx/GetVehicleProposals?Callback=?&CustomerID=\"\"&Latitude=0&Longitude=0";
-        config.automobile.lat = config.lat;
-        config.automobile.lon = config.lon;
+    if (config.automobile) {
+      //https://www.reservauto.net/WCF/LSI/LSIBookingService.asmx/GetVehicleProposals?Callback=?&CustomerID=""&Latitude=0&Longitude=0
+      var automobileurl = "https://www.reservauto.net/WCF/LSI/LSIBookingService.asmx/GetVehicleProposals?Callback=?&CustomerID=\"\"&Latitude=0&Longitude=0";
+      config.automobile.lat = config.lat;
+      config.automobile.lon = config.lon;
+      calls.push(function (callback) {
         var automobile2sm = require('./automobiletostaticmap');
         dependencies.easyRequest.HTML(automobileurl, function (err, jsonp) {
           var json = JSON.parse(jsonp.substring(2, jsonp.length - 2));
-          url += automobile2sm.automobilejson_to_static_map(limit, count, config.automobile, json);
-          if (url.length >= 2048) {
-            logger.error("Long staticmap URL: (" + url.length + ") " + url);
+          var urlfragment = automobile2sm.automobilejson_to_static_map(limit, count, config.automobile, json);
+          if (urlfragment.length >= 2048) {
+            logger.error("Long staticmap (automobile) URL fragment: (" + urlfragment.length + ") " + urlfragment);
           }
-          url += append_theme_safe(url.length);
-          logger.trace("Complete staticmap: " + url);
-          jobCallback(err, {title: config.widgetTitle, url: url});
+          callback(null, urlfragment);
         });
-      } else {
-        url += append_theme_safe(url.length);
-        logger.trace("Complete staticmap: " + url);
-        jobCallback(err, {title: config.widgetTitle, url: url});
-      }
+      });
     }
 
-    function check_car2go() {
-      if (config.car2go) {
-        // http://www.car2go.com/api/v2.1/vehicles?loc=austin&oauth_consumer_key=consumerkey&format=json
-        var car2gourl = "http://www.car2go.com/api/v2.1/vehicles?format=json";
-        car2gourl += "&loc=" + config.car2go.loc;
-        car2gourl += "&oauth_consumer_key=" + config.car2go.apikey;
-        config.car2go.lat = config.lat;
-        config.car2go.lon = config.lon;
+
+    if (config.car2go) {
+      // http://www.car2go.com/api/v2.1/vehicles?loc=austin&oauth_consumer_key=consumerkey&format=json
+      var car2gourl = "http://www.car2go.com/api/v2.1/vehicles?format=json";
+      car2gourl += "&loc=" + config.car2go.loc;
+      car2gourl += "&oauth_consumer_key=" + config.car2go.apikey;
+      config.car2go.lat = config.lat;
+      config.car2go.lon = config.lon;
+      calls.push(function (callback) {
         var car2go2sm = require('./car2gotostaticmap');
         dependencies.easyRequest.JSON(car2gourl, function (err, json) {
-          url += car2go2sm.car2gojson_to_static_map(limit, count, config.car2go, json);
-          if (url.length >= 2048) {
+          var urlfragment = car2go2sm.car2gojson_to_static_map(limit, count, config.car2go, json);
+          if (urlfragment.length >= 2048) {
             logger.error("Long staticmap URL: (" + url.length + ") " + url);
           }
-          check_automobile();
+          callback(null, urlfragment);
         });
-      } else {
-        check_automobile();
-      }
+      });
     }
 
-    function check_bixi() {
-      if (config.bixi) {
-        config.bixi.lat = config.lat;
-        config.bixi.lon = config.lon;
+    if (config.bixi) {
+      config.bixi.lat = config.lat;
+      config.bixi.lon = config.lon;
 
-        var bixi2sm = require('./bixitostaticmap');
-        var bixiurl = bixi2sm.cities[config.bixi.city].url;
-        if (config.bixi.url) {
-          bixiurl = config.bixi.url; // hidden override
-        }
+      var bixi2sm = require('./bixitostaticmap');
+      var bixiurl = bixi2sm.cities[config.bixi.city].url;
+      if (config.bixi.url) {
+        bixiurl = config.bixi.url; // hidden override
+      }
+      calls.push(function (callback) {
         dependencies.easyRequest.JSON(bixiurl, function (err, json) {
-          url += bixi2sm.bixijson_to_static_map(limit, count, config.bixi, json);
-          check_car2go();
+          var urlfragment = bixi2sm.bixijson_to_static_map(limit, count, config.bixi, json);
+          if (urlfragment.length >= 2048) {
+            logger.error("Long staticmap URL: (" + urlfragment.length + ") " + urlfragment);
+          }
+          callback(null, urlfragment);
         });
-      } else {
-        check_car2go();
-      }
+      });
     }
 
-    check_bixi();
+    dependencies.async.parallel(calls, function (err, results) {
+        // optional callback
+        var url = "https://maps.googleapis.com/maps/api/staticmap?" +
+          "center=" + config.lat + "," + config.lon +
+          "&size=" + size;
+        if (config.globalAuth && config.globalAuth.staticmap && config.globalAuth.staticmap.apikey) {
+          url += "&key=" + config.globalAuth.staticmap.apikey;
+        }
+        if (config.zoom) {
+          url += "&zoom=" + config.zoom;
+        }
+        if (config.maptype) {
+          url += "&maptype=" + config.maptype;
+        }
+        url += "&markers=color:green|" + config.lat + "," + config.lon + "";
+        for (var i = 0; i < results.length; i++) {
+          logger.trace(i + ": " + results[i]);
+          url += results[i];
+          if (url.length >= 2048) {
+            logger.error("Long staticmap with URL fragment: (" + i + " - " + url.length + ") " + url);
+            break;
+          }
+          url += append_theme_safe(url.length);
+        }
+        jobCallback(err, {title: config.widgetTitle, url: url});
+      }
+    );
   }
-}
+};

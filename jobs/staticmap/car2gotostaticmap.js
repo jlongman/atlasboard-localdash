@@ -52,7 +52,7 @@ function car2gojson_to_static_map(limit, count, config, json) {
     }
   }
 
-  {
+  if (closecars.length > 0) {
     closecars = closecars.sort(function (a, b) {
       return a.distance - b.distance;
     });
