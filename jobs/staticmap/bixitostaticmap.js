@@ -101,7 +101,7 @@ function bixijson_to_static_map(limit, count, config, json) {
 
   var url = "";
   
-  var stations = JSON.parse(json)[schema_stations];
+  var stations = json[schema_stations];
   var distance = require('./distance');
 
   var closestations = []

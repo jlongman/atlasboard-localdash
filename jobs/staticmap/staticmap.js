@@ -172,7 +172,7 @@ module.exports = {
         config.car2go.lat = config.lat;
         config.car2go.lon = config.lon;
         var car2go2sm = require('./car2gotostaticmap');
-        dependencies.easyRequest.HTML(car2gourl, function (err, json) {
+        dependencies.easyRequest.JSON(car2gourl, function (err, json) {
           url += car2go2sm.car2gojson_to_static_map(limit, count, config.car2go, json);
           if (url.length >= 2048) {
             logger.error("Long staticmap URL: (" + url.length + ") " + url);
@@ -196,7 +196,7 @@ module.exports = {
         if (config.bixi.url) {
           bixiurl = config.bixi.url; // hidden override
         }
-        dependencies.easyRequest.HTML(bixiurl, function (err, json) {
+        dependencies.easyRequest.JSON(bixiurl, function (err, json) {
           url += bixi2sm.bixijson_to_static_map(limit, count, config.bixi, json);
           check_car2go();
         });

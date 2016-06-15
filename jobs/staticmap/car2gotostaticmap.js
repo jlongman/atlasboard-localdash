@@ -38,7 +38,7 @@
 function car2gojson_to_static_map(limit, count, config, json) {
   // logger.trace(json);
   var url = "";
-  var vehicles = JSON.parse(json)["placemarks"];
+  var vehicles = json["placemarks"];
 
   var distance = require('./distance');
 
