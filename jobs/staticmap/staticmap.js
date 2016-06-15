@@ -8,15 +8,14 @@
  *    "limit": 600,
  *    "count": 20,
  *    "maptype": "terrain",
+ *    "size": "640x640",
+ *    "zoom":16
  *    "bixi": {
  *      "city": "nyc"
- *      "apikey" : "YourGoogleAPIKey",
- *      "size": "640x640",
- *      "zoom":16
  *    },
  *    "car2go": {
- *      "apikey" : "YourCar2GoConsumerKey",
  *      "loc" : "montreal"
+ *      "apikey" : "YourCar2GoConsumerKey",
  *    }
  * }
  *
@@ -24,23 +23,17 @@
  * lon centre of map
  * limit is radial distance in meters
  * count is the count-closest stations max
+ * maptype roadmap, satellite, hybrid, terrain; may help with theming url length issues
+ * zoom is recommended at 15 or 16, if unset google decides zoom
+ * size defaults to 640x640, the max available wihtout a Google API key
+ *
+ * config.globalAuth.staticmap.apikey is the Google API Key, required for maps larger than 640x640
  *
  * bixi.city values:
  *  montreal, ottawa, boston, chicago, nyc, toronto, columbus, chattanooga, sf
  *
- * bixi.* OPTIONAL
- *    "apikey" : "YourGoogleAPIKey",
- *    "size": "640x640",
- *    "zoom":16
- *
- * bixi.apikey is the Google API Key, required for maps larger than 640x640
- * bixi.zoom is recommended at 16
- * bixi.size defaults to 640x640, the max available wihtout a Google API key
- * bixi.zoom if unset google decides zoom
- *
- * car2go.key is their oauth key
  * car2go.loc is their city identifier
- *
+ * car2go.key is their oauth key
  *
  */
 
@@ -154,17 +147,6 @@ module.exports = {
 
     url += "&markers=color:green|label:X|" + config.lat + "," + config.lon + "";
 
-    if (config.car2go) {
-      // http://www.car2go.com/api/v2.1/vehicles?loc=austin&oauth_consumer_key=consumerkey&format=json
-      var car2gourl = "http://www.car2go.com/api/v2.1/vehicles?format=json";
-      car2gourl += "&loc=" + config.car2go.loc;
-      car2gourl += "&oauth_consumer_key=" + config.car2go.apikey;
-      config.car2go.lat = config.lat;
-      config.car2go.lon = config.lon;
-      var car2go2sm = require('./car2gotostaticmap');
-    }
-
-
     var err = null;
 
     function append_theme_safe(mapurllength) {
@@ -181,36 +163,15 @@ module.exports = {
       return theme;
     }
 
-    if (config.bixi) {
-      config.bixi.lat = config.lat;
-      config.bixi.lon = config.lon;
-
-      var bixi2sm = require('./bixitostaticmap');
-      var bixiurl = bixi2sm.cities[config.bixi.city].url;
-      if (config.bixi.url) {
-        bixiurl = config.bixi.url; // hidden override
-      }
-      dependencies.easyRequest.HTML(bixiurl, function (err, json) {
-        url += bixi2sm.bixijson_to_static_map(limit, count, config.bixi, json);
-        if (config.car2go) {
-          dependencies.easyRequest.HTML(car2gourl, function (err, json) {
-            url += car2go2sm.car2gojson_to_static_map(limit, count, config.car2go, json);
-            if (url.length >= 2048) {
-              logger.error("Long staticmap URL: (" + url.length + ") " + url);
-            }
-            url += append_theme_safe(url.length);
-            jobCallback(err, {title: config.widgetTitle, url: url});
-          });
-        } else {
-          if (url.length >= 2048) {
-            logger.error("Long staticmap URL: (" + url.length + ") " + url);
-          }
-          url += append_theme_safe(url.length);
-          jobCallback(err, {title: config.widgetTitle, url: url});
-        }
-      });
-    } else {
+    function check_car2go() {
       if (config.car2go) {
+        // http://www.car2go.com/api/v2.1/vehicles?loc=austin&oauth_consumer_key=consumerkey&format=json
+        var car2gourl = "http://www.car2go.com/api/v2.1/vehicles?format=json";
+        car2gourl += "&loc=" + config.car2go.loc;
+        car2gourl += "&oauth_consumer_key=" + config.car2go.apikey;
+        config.car2go.lat = config.lat;
+        config.car2go.lon = config.lon;
+        var car2go2sm = require('./car2gotostaticmap');
         dependencies.easyRequest.HTML(car2gourl, function (err, json) {
           url += car2go2sm.car2gojson_to_static_map(limit, count, config.car2go, json);
           if (url.length >= 2048) {
@@ -220,12 +181,31 @@ module.exports = {
           jobCallback(err, {title: config.widgetTitle, url: url});
         });
       } else {
-        if (url.length >= 2048) {
-          logger.error("Long staticmap URL: (" + url.length + ") " + url);
-        }
         url += append_theme_safe(url.length);
         jobCallback(err, {title: config.widgetTitle, url: url});
       }
     }
+
+    function check_bixi() {
+      if (config.bixi) {
+        config.bixi.lat = config.lat;
+        config.bixi.lon = config.lon;
+
+        var bixi2sm = require('./bixitostaticmap');
+        var bixiurl = bixi2sm.cities[config.bixi.city].url;
+        if (config.bixi.url) {
+          bixiurl = config.bixi.url; // hidden override
+        }
+        dependencies.easyRequest.HTML(bixiurl, function (err, json) {
+          url += bixi2sm.bixijson_to_static_map(limit, count, config.bixi, json);
+          check_car2go();
+        });
+
+      } else {
+        check_car2go();
+      }
+    }
+
+    check_bixi();
   }
-};
+}
