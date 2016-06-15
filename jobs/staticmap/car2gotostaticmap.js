@@ -56,7 +56,16 @@ function car2gojson_to_static_map(limit, count, config, json) {
     closecars = closecars.sort(function (a, b) {
       return a.distance - b.distance;
     });
-    url += "&markers=color:blue";
+    if (config.icon) {
+      if (config.icon == "" || config.icon == "default") {
+        url += "&markers=icon:" + "http://goo.gl/OXgCcL";
+      } else {
+        url += "&markers=icon:" + config.icon;
+      }
+    } else {
+      url += "&markers=color:blue";
+    }
+
     for (var i = 0; i < closecars.length && i < count; i++) {
       var close = closecars[i];
       url += "|" + distance.roundToMeter(close.coordinates[1]) + "," + distance.roundToMeter(close.coordinates[0]);
