@@ -145,7 +145,7 @@ module.exports = {
       url += "&maptype=" + config.maptype;
     }
 
-    url += "&markers=color:green|label:X|" + config.lat + "," + config.lon + "";
+    url += "&markers=color:green|" + config.lat + "," + config.lon + "";
 
     var err = null;
 
@@ -163,6 +163,32 @@ module.exports = {
       return theme;
     }
 
+
+
+    function check_automobile() {
+      if (config.automobile) {
+        //https://www.reservauto.net/WCF/LSI/LSIBookingService.asmx/GetVehicleProposals?Callback=?&CustomerID=""&Latitude=0&Longitude=0
+        var automobileurl = "https://www.reservauto.net/WCF/LSI/LSIBookingService.asmx/GetVehicleProposals?Callback=?&CustomerID=\"\"&Latitude=0&Longitude=0";
+        config.automobile.lat = config.lat;
+        config.automobile.lon = config.lon;
+        var automobile2sm = require('./automobiletostaticmap');
+        dependencies.easyRequest.HTML(automobileurl, function (err, jsonp) {
+          var json = JSON.parse(jsonp.substring(2, jsonp.length - 2));
+          url += automobile2sm.automobilejson_to_static_map(limit, count, config.automobile, json);
+          if (url.length >= 2048) {
+            logger.error("Long staticmap URL: (" + url.length + ") " + url);
+          }
+          url += append_theme_safe(url.length);
+          logger.trace("Complete staticmap: " + url);
+          jobCallback(err, {title: config.widgetTitle, url: url});
+        });
+      } else {
+        url += append_theme_safe(url.length);
+        logger.trace("Complete staticmap: " + url);
+        jobCallback(err, {title: config.widgetTitle, url: url});
+      }
+    }
+
     function check_car2go() {
       if (config.car2go) {
         // http://www.car2go.com/api/v2.1/vehicles?loc=austin&oauth_consumer_key=consumerkey&format=json
@@ -177,12 +203,10 @@ module.exports = {
           if (url.length >= 2048) {
             logger.error("Long staticmap URL: (" + url.length + ") " + url);
           }
-          url += append_theme_safe(url.length);
-          jobCallback(err, {title: config.widgetTitle, url: url});
+          check_automobile();
         });
       } else {
-        url += append_theme_safe(url.length);
-        jobCallback(err, {title: config.widgetTitle, url: url});
+        check_automobile();
       }
     }
 
@@ -200,7 +224,6 @@ module.exports = {
           url += bixi2sm.bixijson_to_static_map(limit, count, config.bixi, json);
           check_car2go();
         });
-
       } else {
         check_car2go();
       }
