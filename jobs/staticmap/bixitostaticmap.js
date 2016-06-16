@@ -182,8 +182,6 @@ function bixijson_to_static_map(limit, count, config, json) {
 
           }
           url += "|" + distance.roundToMeter(close.coordinates[0]) + "," + distance.roundToMeter(close.coordinates[1]);
-
-
         }
       }
     }

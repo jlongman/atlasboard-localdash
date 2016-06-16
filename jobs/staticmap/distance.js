@@ -34,5 +34,9 @@ function roundToSix(num) {
   return +(Math.round(num + "e+6")  + "e-6");
 };
 
+function roundToSeven(num) {
+  return +(Math.round(num + "e+7")  + "e-7");
+};
+
 module.exports.distance = distance;
-module.exports.roundToMeter = roundToSix;
+module.exports.roundToMeter = roundToFive;

@@ -3,40 +3,44 @@
  * Code fragment from bixi atlastboard
  * Example Config:
  * "mystaticmap": {
- *    "lat": 40.76727,
+ *    "lat": 45.76727,
  *    "lon":-73.99392888,
  *    "limit": 600,
  *    "count": 20,
  *    "maptype": "terrain",
  *    "size": "640x640",
- *    "zoom":16
+ *    "zoom":16,
+ *    "communauto": {
+ *      "cityID": 59
+ *    },
  *    "bixi": {
- *      "city": "nyc"
+ *      "city": "montreal"
  *    },
  *    "car2go": {
  *      "loc" : "montreal"
- *      "apikey" : "YourCar2GoConsumerKey",
  *    }
  * }
  *
  * lat centre of map
  * lon centre of map
- * limit is radial distance in meters
- * count is the count-closest stations max
- * maptype roadmap, satellite, hybrid, terrain; may help with theming url length issues
- * zoom is recommended at 15 or 16, if unset google decides zoom
- * size defaults to 640x640, the max available wihtout a Google API key
+ * limit is radial distance in meters, optional
+ * count is the count-closest stations max, optional
+ * maptype roadmap, satellite, hybrid, terrain; may help with theming url length issues, optional
+ * zoom is recommended at 15 or 16, if unset google decides zoom, optional
+ * size defaults to 640x640, the max available wihtout a Google API key, optional
  *
  * config.globalAuth.staticmap.apikey is the Google API Key, required for maps larger than 640x640
+ * config.globalAuth.car2go.apikey is the car2go key
  *
- * bixi.city values:
- *  montreal, ottawa, boston, chicago, nyc, toronto, columbus, chattanooga, sf
+ * bixi.city values, mandatory:
+ *   montreal, ottawa, boston, chicago, nyc, toronto, columbus, chattanooga, sf
+ * Adding new bixi cities requires understanding which pattern the city uses then changing the structures in
+ * bixitostaticmap.js.
  *
- * car2go.loc is their city identifier
- * car2go.key is their oauth key
+ * car2go.loc is their city identifier, mandatory
  *
  */
-
+const cache_response = {};
 module.exports = {
 
   /**
@@ -56,6 +60,7 @@ module.exports = {
      });
      */
   },
+
 
   /**
    * Executed every interval
@@ -123,17 +128,18 @@ module.exports = {
     if (config.size) {
       size = config.size;
     }
-    var limit = 600;
+    var limit = 700;
     if (config.limit) {
       limit = config.limit;
     }
-    var count = 100;
+    var count = 50;
     if (config.count) {
       count = config.count;
     }
 
 
     var calls = [];
+
     function append_theme_safe(mapurllength) {
       var theme = "";
       if (config.themeString) {
@@ -149,22 +155,48 @@ module.exports = {
     }
 
 
-    if (config.automobile) {
-      //https://www.reservauto.net/WCF/LSI/LSIBookingService.asmx/GetVehicleProposals?Callback=?&CustomerID=""&Latitude=0&Longitude=0
-      var automobileurl = "https://www.reservauto.net/WCF/LSI/LSIBookingService.asmx/GetVehicleProposals?Callback=?&CustomerID=\"\"&Latitude=0&Longitude=0";
-      config.automobile.lat = config.lat;
-      config.automobile.lon = config.lon;
+    if (config.communauto) {
+      config.communauto.lat = config.lat;
+      config.communauto.lon = config.lon;
+      var communauto2sm = require('./communautotostaticmap');
+
+      // Automobile portion
       calls.push(function (callback) {
-        var automobile2sm = require('./automobiletostaticmap');
+        var automobileurl = "https://www.reservauto.net/WCF/LSI/LSIBookingService.asmx/GetVehicleProposals?Callback=?&CustomerID=\"\"&Latitude=0&Longitude=0";
         dependencies.easyRequest.HTML(automobileurl, function (err, jsonp) {
           var json = JSON.parse(jsonp.substring(2, jsonp.length - 2));
-          var urlfragment = automobile2sm.automobilejson_to_static_map(limit, count, config.automobile, json);
+          var urlfragment = communauto2sm.automobilejson_to_static_map(limit, count, config.communauto, json);
           if (urlfragment.length >= 2048) {
             logger.error("Long staticmap (automobile) URL fragment: (" + urlfragment.length + ") " + urlfragment);
           }
           callback(null, urlfragment);
         });
       });
+      if (config.communauto.cityID) {
+        // communauto portion - data never changes
+        var communautourl = "https://www.reservauto.net/Scripts/Client/Ajax/PublicCall/Select_ListStations.asp?BranchID=''&CurrentLanguageID=1";
+        communautourl += "&CityID=" + config.communauto.cityID;
+
+        calls.push(function (callback) {
+          var key_cache = "communauto-" + encodeURIComponent(config.lat + config.lon);
+          if (!cache_response[key_cache]) {
+            dependencies.easyRequest.HTML(communautourl, function (err, jsonp) {
+              // console.log(jsonp.substring(1, jsonp.length - 1).replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":'));
+              // convert from broken jsonp to json
+              jsonp = jsonp.substring(1, jsonp.length - 1).replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":');
+              var json = JSON.parse(jsonp);
+              var urlfragment = communauto2sm.communautojson_to_static_map(limit, count, config.communauto, json);
+              if (urlfragment.length >= 2048) {
+                logger.error("Long staticmap (automobile) URL fragment: (" + urlfragment.length + ") " + urlfragment);
+              }
+              cache_response[key_cache] = urlfragment;
+              callback(null, urlfragment);
+            });
+          } else {
+            callback(null, cache_response[key_cache]);
+          }
+        });
+      }
     }
 
 
@@ -172,7 +204,9 @@ module.exports = {
       // http://www.car2go.com/api/v2.1/vehicles?loc=austin&oauth_consumer_key=consumerkey&format=json
       var car2gourl = "http://www.car2go.com/api/v2.1/vehicles?format=json";
       car2gourl += "&loc=" + config.car2go.loc;
-      car2gourl += "&oauth_consumer_key=" + config.car2go.apikey;
+      if (config.globalAuth && config.globalAuth.car2go && config.globalAuth.car2go.apikey) {
+        car2gourl += "&oauth_consumer_key=" + config.globalAuth.car2go.apikey;
+      }
       config.car2go.lat = config.lat;
       config.car2go.lon = config.lon;
       calls.push(function (callback) {
@@ -215,13 +249,14 @@ module.exports = {
         if (config.globalAuth && config.globalAuth.staticmap && config.globalAuth.staticmap.apikey) {
           url += "&key=" + config.globalAuth.staticmap.apikey;
         }
+        // url += "&scale=2"; // experimental
         if (config.zoom) {
           url += "&zoom=" + config.zoom;
         }
         if (config.maptype) {
           url += "&maptype=" + config.maptype;
         }
-        url += "&markers=color:green|" + config.lat + "," + config.lon + "";
+        url += "&markers=color:yellow|" + config.lat + "," + config.lon + "";
         for (var i = 0; i < results.length; i++) {
           logger.trace(i + ": " + results[i]);
           url += results[i];
@@ -229,8 +264,8 @@ module.exports = {
             logger.error("Long staticmap with URL fragment: (" + i + " - " + url.length + ") " + url);
             break;
           }
-          url += append_theme_safe(url.length);
         }
+        url += append_theme_safe(url.length);
         jobCallback(err, {title: config.widgetTitle, url: url});
       }
     );

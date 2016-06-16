@@ -9,14 +9,14 @@
  *    "count": 20,
  *    "car2go": {
  *      "loc": "montreal"
- *      "key" : "YourCar2GoConsumerKey",
+ *      
  *  },
  *
  * limit is radial distance in meters
  * count is the count-closest stations max
  *
  * OPTIONAL
- *    "key" : "YourCar2GoConsumerKey",
+ *    "global.key" : "YourCar2GoConsumerKey",
  *
  * key is the Google API Key, required for maps larger than 640x640
  * zoom is recommended at 16
