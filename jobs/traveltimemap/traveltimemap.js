@@ -116,8 +116,20 @@ module.exports = {
 
     dependencies.easyRequest.HTML(url, function (err, json) {
       // logger.trace(json);
+     try {
       var results = JSON.parse(json);
-      var message = results.routes[0].legs[0].duration.text;
+      var message = "not found";
+      if (results.routes.length > 0) {
+      	var routes = results.routes[0];
+      	message = routes.legs[0].duration.text;
+	} else {
+   logger.warn("traveltimemap.js URL had no results: " + url);
+}
+} catch (err){
+   logger.trace(err);
+   logger.warn("traveltimemap.js URL had errors: " + url);
+  
+}
       var widgetTitle = config.widgetTitle;
       var mode = "driving";
       if (config.mode) {
@@ -138,6 +150,7 @@ module.exports = {
       mapurl += "&key=" + config.globalAuth.traveltimemap.apikey;
       mapurl += "&size=200x200";
       var quickmap = true;
+      if (results.routes.length > 0) {
       { // search for transit items, or use the quickmap
         out:      for (i = 0; i < results.routes[0].legs.length; i++) {
           var leg = results.routes[0].legs[i];
@@ -191,6 +204,7 @@ module.exports = {
       var linkurl = "https://maps.google.com/maps/dir/" +
         encodeURIComponent(results.routes[0].legs[0].start_address) + "/" +
         encodeURIComponent(results.routes[0].legs[0].end_address);
+      }
       modes = [
         {
           "text": message,

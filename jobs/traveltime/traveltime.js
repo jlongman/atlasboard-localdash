@@ -127,8 +127,18 @@ module.exports = {
     
     dependencies.easyRequest.HTML(url, function (err, json) {
       // logger.trace(json);
+      try {
       var results = JSON.parse(json);
-      var message = results.rows[0].elements[0].duration.text;
+      var message = "..."
+      if (results.rows.length > 0) {
+	message = results.rows[0].elements[0].duration.text;
+} else {
+   logger.warn("traveltime.js URL had no results: " + url);
+}
+} catch (err){
+   logger.trace(err);
+   logger.warn("traveltime.js URL had error: " + url);
+}
       var widgetTitle = config.widgetTitle;
       if (config.mode) {
         widgetTitle += " - " + config.mode;
@@ -136,6 +146,7 @@ module.exports = {
       if (config.destination) {
         widgetTitle += " - " + config.destination;
       }
+      
       var datum = [{
         "message": message,
         "mode": config.mode
