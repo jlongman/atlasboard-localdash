@@ -104,14 +104,21 @@ function bixijson_to_static_map(limit, count, config, json) {
   var stations = json[schema_stations];
   var distance = require('./distance');
 
-  var closestations = []
+  var closestations = [];
+
+  var bikes_available = 0;
   for (var i = 0; i < stations.length; i++) {
     var station = stations[i];
+    bikes_available += station[schema_bikes]
     station.coordinates = [station[schema_lat], station[schema_long]];
     station.distance = distance.distance(station.coordinates[0], station.coordinates[1], config.lat, config.lon);
     if (station.distance < limit) {
       closestations.push(station);
     }
+  }
+  if (bikes_available == 0) {
+    // service isn't running
+    return url;
   }
 
   var showstations;
