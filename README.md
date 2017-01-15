@@ -1,14 +1,36 @@
 # atlasboard-localdash
 
-A collection of tools relevant to locally-oriented dashboards.  This is intended to run as an [atlasboard](https://bitbucket.org/atlassian/atlasboard) submodule.
+A collection of tools relevant to locally-oriented dashboards supporting car2go, biki bike sharing and the Montreal metro.  This is intended to run as an [atlasboard](https://bitbucket.org/atlassian/atlasboard) submodule.
 
-<img src="https://cloud.githubusercontent.com/assets/1051995/15908916/0114c096-2d92-11e6-994e-0ac693b478e5.png" width="600"/>
+<img src="https://cloud.githubusercontent.com/assets/1051995/21964260/a321c7c6-db16-11e6-88e4-857745bf25d7.png" width="600"/>
 
-Note the shown dashboard includes [altlasboard-social](https://bitbucket.org/jlongman/atlasboard-social-package) for twitter, [atlasboard-weather](http://www.github.com/jlongman/atlasboard-weather/)  and a slightly modified `google-calendar` job/widget from the `atlasboard-demo` package. (top-right, bottom-middle and middle-right, respectively.)
+Note the shown dashboard includes [altlasboard-social](https://bitbucket.org/jlongman/atlasboard-social-package) for twitter, [atlasboard-weather](http://www.github.com/jlongman/atlasboard-weather/)  and a slightly modified `google-calendar` job/widget from the `atlasboard-demo` package. (middle-right, bottom-middle and middle-bottom, respectively.)
 
+
+- [Metro514](#metro514)
 - [Staticmap](#staticmap)
 - [Traveltime](#traveltime)
 - [Traveltimemap](#traveltimemap)
+
+## [Metro514](#metro514)
+
+<img align="right" src="https://cloud.githubusercontent.com/assets/1051995/21964291/54427abe-db17-11e6-8fe4-e47e478772c2.png">
+Creates a table showing the current Montreal metro line status and the current message from the STM. Non-normal conditions are highlighted.  This works best as a 1-column, 2-row element.
+
+### Configuration:
+
+All configuration options are optional.
+
+```javascript
+  "metro514": {
+    "language": "english"
+  }
+```
+
+### Values
+
+The `language` configuation option can be either `english` or `french`.
+
 
 ## [Staticmap](#staticmap)
 
