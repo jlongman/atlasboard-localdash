@@ -1,0 +1,20 @@
+{
+  "author":"J. Longman",
+  "name":"atlasboard-localdash",
+  "description":"Localdash package for Atlasboard",
+  "version":"0.0.1",
+  "homepage":"",
+  "repository":{
+    "type":"git",
+    "url":""
+  },
+  "dependencies": {
+    "xml2js":  "0.4.17"
+  },
+  "contributors": [
+    {
+      "name": "J. Longman",
+      "email":"jlongman@gmail.com"
+    }
+  ]
+}
