@@ -96,11 +96,16 @@ module.exports = {
      Have a look at test/metro for an example of how to unit tests this easily by mocking easyRequest calls
 
      */
+    const line_url_base = {
+      "msgAnglais": "http://www.stm.info/en/info/networks/metro/",
+      "msgFrancais" : "http://www.stm.info/fr/infos/reseaux/metro/"
+
+    };
     const url = "http://www2.stm.info/1997/alertesmetro/esm.xml";
     const goodString = "Service normal";
     const nameTable = {
       'msgAnglais': ['Green', 'Orange', 'N/A', 'Blue', 'Yellow'],
-      'msgFrancais': ['Vert', 'Orange', 'N/A', 'Bleu', 'Jaune']
+      'msgFrancais': ['Verte', 'Orange', 'N/A', 'Bleue  ', 'Jaune']
     };
 
     var xml2js = require('xml2js');
@@ -115,13 +120,14 @@ module.exports = {
         try {
           for (var count = 0, len = result.Root.Ligne.length; count < len; count ++) {
             var line = result.Root.Ligne[count];
+            var lineName = nameTable[language][line['NoLigne'] - 1 ];
             datum.push({
               "lineNo" : line['NoLigne'],
-              "lineName" : nameTable[language][line['NoLigne'] - 1 ],
-              "msg" : line['msgFrancais'],
+              "lineName" : lineName,
+              "lineColor" : nameTable['msgAnglais'][line['NoLigne'] - 1 ].toLowerCase(),
               "normal" : ("" + line['msgFrancais']).indexOf(goodString) >= 0,
-              "normaltype": typeof ("" + line['msgFrancais']),
-              "message" : line[language]
+              "message" : line[language],
+              "link" : line_url_base[language] + lineName.toLowerCase()
             });
           }
         } catch (err_or) {

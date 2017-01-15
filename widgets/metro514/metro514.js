@@ -33,8 +33,9 @@ widget = {
           // "<img width='50px' src='/widgets/resources?resource=localdash/images/mode_" + datum.mode + ".png'/>" +
           // "</a>" +
           "<tr ><td style='height:25%'></td><td class='bd'>" +
-          "<span class='label' style='color:"+ datum.lineName.toLowerCase()+"'>" +
-          datum.lineName + "</span>"+
+          "<a href='"+ datum.link +
+          "' class='label' style='color:"+ datum.lineColor+"'>" +
+          datum.lineName + "</a>"+
           "<br/>" +
           datum.message +
           "</td></tr>"
