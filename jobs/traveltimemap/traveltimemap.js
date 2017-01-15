@@ -116,20 +116,21 @@ module.exports = {
 
     dependencies.easyRequest.HTML(url, function (err, json) {
       // logger.trace(json);
-     try {
-      var results = JSON.parse(json);
-      var message = "not found";
-      if (results.routes.length > 0) {
-      	var routes = results.routes[0];
-      	message = routes.legs[0].duration.text;
-	} else {
-   logger.warn("traveltimemap.js URL had no results: " + url);
-}
-} catch (err){
-   logger.trace(err);
-   logger.warn("traveltimemap.js URL had errors: " + url);
-  
-}
+      try {
+        var results = JSON.parse(json);
+        var message = "not found";
+        if (results.routes.length > 0) {
+          var routes = results.routes[0];
+          message = routes.legs[0].duration.text;
+        } else {
+          logger.warn("traveltimemap.js URL had no results: " + url);
+        }
+      } catch (err) {
+        logger.trace(err);
+        logger.warn("traveltimemap.js URL had errors: " + url);
+        jobCallback(err, null);
+        return;
+      }
       var widgetTitle = config.widgetTitle;
       var mode = "driving";
       if (config.mode) {
@@ -151,59 +152,59 @@ module.exports = {
       mapurl += "&size=200x200";
       var quickmap = true;
       if (results.routes.length > 0) {
-      { // search for transit items, or use the quickmap
-        out:      for (i = 0; i < results.routes[0].legs.length; i++) {
-          var leg = results.routes[0].legs[i];
-          for (j = 0; j < leg.steps.length; j++) {
-            var step = leg.steps[j];
-            if (step.transit_details) {
-              quickmap = false;
-              break out;
-            }
-          }
-        }
-      }
-      if (config.maptype) {
-        mapurl += "&maptype=" + config.maptype;
-      }
-      if (quickmap) {
-        mapurl += "&path=";
-        if (config.travelcolor) {
-          mapurl += "color:" + config.travelcolor + "|";
-        }
-        mapurl += "enc:" + encodeURIComponent(results.routes[0].overview_polyline.points);
-      } else {
-        for (i = 0; i < results.routes[0].legs.length; i++) {
-          leg = results.routes[0].legs[i];
-          for (j = 0; j < leg.steps.length; j++) {
-            step = leg.steps[j];
-            mapurl += "&path=";
-            if (step.transit_details && step.transit_details.line.color) {
-              mapurl += "color:0" + step.transit_details.line.color.replace("#", "x") + "|";
-            } else {
-              if (config.travelcolor) {
-                mapurl += "color:" + config.travelcolor + "|";
+        { // search for transit items, or use the quickmap
+          out:      for (i = 0; i < results.routes[0].legs.length; i++) {
+            var leg = results.routes[0].legs[i];
+            for (j = 0; j < leg.steps.length; j++) {
+              var step = leg.steps[j];
+              if (step.transit_details) {
+                quickmap = false;
+                break out;
               }
             }
-            mapurl += "enc:" + encodeURIComponent(step.polyline.points);
           }
         }
-      }
-      if (mapurl.length >= 2048) {
-        logger.error("Long traveltimemap URL BEFORE theme: (" + mapurl.length + ") " + mapurl);
-      }
-      var theme = "";
-      if (config.themeString) {
-        theme += config.themeString;
-        if (mapurl.length + theme.length >= 2048) {
-          logger.warn("Long traveltimemap URL with theme : (" + mapurl.length + ", " + theme.length + ") " + mapurl + theme);
-        } else {
-          mapurl += theme;
+        if (config.maptype) {
+          mapurl += "&maptype=" + config.maptype;
         }
-      }
-      var linkurl = "https://maps.google.com/maps/dir/" +
-        encodeURIComponent(results.routes[0].legs[0].start_address) + "/" +
-        encodeURIComponent(results.routes[0].legs[0].end_address);
+        if (quickmap) {
+          mapurl += "&path=";
+          if (config.travelcolor) {
+            mapurl += "color:" + config.travelcolor + "|";
+          }
+          mapurl += "enc:" + encodeURIComponent(results.routes[0].overview_polyline.points);
+        } else {
+          for (i = 0; i < results.routes[0].legs.length; i++) {
+            leg = results.routes[0].legs[i];
+            for (j = 0; j < leg.steps.length; j++) {
+              step = leg.steps[j];
+              mapurl += "&path=";
+              if (step.transit_details && step.transit_details.line.color) {
+                mapurl += "color:0" + step.transit_details.line.color.replace("#", "x") + "|";
+              } else {
+                if (config.travelcolor) {
+                  mapurl += "color:" + config.travelcolor + "|";
+                }
+              }
+              mapurl += "enc:" + encodeURIComponent(step.polyline.points);
+            }
+          }
+        }
+        if (mapurl.length >= 2048) {
+          logger.error("Long traveltimemap URL BEFORE theme: (" + mapurl.length + ") " + mapurl);
+        }
+        var theme = "";
+        if (config.themeString) {
+          theme += config.themeString;
+          if (mapurl.length + theme.length >= 2048) {
+            logger.warn("Long traveltimemap URL with theme : (" + mapurl.length + ", " + theme.length + ") " + mapurl + theme);
+          } else {
+            mapurl += theme;
+          }
+        }
+        var linkurl = "https://maps.google.com/maps/dir/" +
+          encodeURIComponent(results.routes[0].legs[0].start_address) + "/" +
+          encodeURIComponent(results.routes[0].legs[0].end_address);
       }
       modes = [
         {
