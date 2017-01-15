@@ -164,12 +164,19 @@ module.exports = {
       calls.push(function (callback) {
         var automobileurl = "https://www.reservauto.net/WCF/LSI/LSIBookingService.asmx/GetVehicleProposals?Callback=?&CustomerID=\"\"&Latitude=0&Longitude=0";
         dependencies.easyRequest.HTML(automobileurl, function (err, jsonp) {
-          var json = JSON.parse(jsonp.substring(2, jsonp.length - 2));
-          var urlfragment = communauto2sm.automobilejson_to_static_map(limit, count, config.communauto, json);
-          if (urlfragment.length >= 2048) {
-            logger.error("Long staticmap (automobile) URL fragment: (" + urlfragment.length + ") " + urlfragment);
+          var err = null;
+          try {
+            var json = JSON.parse(jsonp.substring(2, jsonp.length - 2));
+            var urlfragment = communauto2sm.automobilejson_to_static_map(limit, count, config.communauto, json);
+            if (urlfragment.length >= 2048) {
+              logger.error("Long staticmap (automobile) URL fragment: (" + urlfragment.length + ") " + urlfragment);
+            }
+          } catch (err_or) {
+            if (typeof err_or !== 'undefined') {
+              err = err_or;
+            }
           }
-          callback(null, urlfragment);
+          callback(err, urlfragment);
         });
       });
       if (config.communauto.cityID) {
@@ -180,20 +187,27 @@ module.exports = {
         calls.push(function (callback) {
           var key_cache = "communauto-" + encodeURIComponent(config.lat + config.lon);
           if (!cache_response[key_cache]) {
+            var err = null;
             dependencies.easyRequest.HTML(communautourl, function (err, jsonp) {
-              // console.log(jsonp.substring(1, jsonp.length - 1).replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":'));
-              // convert from broken jsonp to json
-              jsonp = jsonp.substring(1, jsonp.length - 1).replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":');
-              var json = JSON.parse(jsonp);
-              var urlfragment = communauto2sm.communautojson_to_static_map(limit, count, config.communauto, json);
-              if (urlfragment.length >= 2048) {
-                logger.error("Long staticmap (automobile) URL fragment: (" + urlfragment.length + ") " + urlfragment);
+              try {
+                // console.log(jsonp.substring(1, jsonp.length - 1).replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":'));
+                // convert from broken jsonp to json
+                jsonp = jsonp.substring(1, jsonp.length - 1).replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":');
+                var json = JSON.parse(jsonp);
+                var urlfragment = communauto2sm.communautojson_to_static_map(limit, count, config.communauto, json);
+                if (urlfragment.length >= 2048) {
+                  logger.error("Long staticmap (automobile) URL fragment: (" + urlfragment.length + ") " + urlfragment);
+                }
+                cache_response[key_cache] = urlfragment;
+              } catch (err_or) {
+                if (typeof err_or !== 'undefined') {
+                  err = err_or;
+                }
               }
-              cache_response[key_cache] = urlfragment;
-              callback(null, urlfragment);
+              callback(err, urlfragment);
             });
           } else {
-            callback(null, cache_response[key_cache]);
+            callback(err, cache_response[key_cache]);
           }
         });
       }
@@ -212,11 +226,17 @@ module.exports = {
       calls.push(function (callback) {
         var car2go2sm = require('./car2gotostaticmap');
         dependencies.easyRequest.JSON(car2gourl, function (err, json) {
-          var urlfragment = car2go2sm.car2gojson_to_static_map(limit, count, config.car2go, json);
-          if (urlfragment.length >= 2048) {
-            logger.error("Long staticmap URL: (" + url.length + ") " + url);
+          try {
+            var urlfragment = car2go2sm.car2gojson_to_static_map(limit, count, config.car2go, json);
+            if (urlfragment.length >= 2048) {
+              logger.error("Long staticmap URL: (" + url.length + ") " + url);
+            }
+          } catch (err_or) {
+            if (typeof err_or !== 'undefined') {
+              err = err_or;
+            }
           }
-          callback(null, urlfragment);
+          callback(err, urlfragment);
         });
       });
     }
@@ -232,11 +252,19 @@ module.exports = {
       }
       calls.push(function (callback) {
         dependencies.easyRequest.JSON(bixiurl, function (err, json) {
-          var urlfragment = bixi2sm.bixijson_to_static_map(limit, count, config.bixi, json);
-          if (urlfragment.length >= 2048) {
-            logger.error("Long staticmap URL: (" + urlfragment.length + ") " + urlfragment);
+          try {
+            var urlfragment = bixi2sm.bixijson_to_static_map(limit, count, config.bixi, json);
+            if (urlfragment.length >= 2048) {
+              logger.error("Long staticmap URL: (" + urlfragment.length + ") " + urlfragment);
+            }
+          } catch (err_or) {
+            if (typeof err_or !== 'undefined') {
+              if (typeof err_or !== 'undefined') {
+                err = err_or;
+              }
+            }
           }
-          callback(null, urlfragment);
+          callback(err, urlfragment);
         });
       });
     }

@@ -112,19 +112,23 @@ module.exports = {
       parseString(xml, function (err, result) {
         // console.dir(result);
         var datum = [];
-
-        for (var count = 0, len = result.Root.Ligne.length; count < len; count ++) {
-          var line = result.Root.Ligne[count];
-          datum.push({
-            "lineNo" : line['NoLigne'],
-            "lineName" : nameTable[language][line['NoLigne'] - 1 ],
-            "msg" : line['msgFrancais'],
-            "normal" : ("" + line['msgFrancais']).indexOf(goodString) >= 0,
-            "normaltype": typeof ("" + line['msgFrancais']),
-            "message" : line[language]
-          });
+        try {
+          for (var count = 0, len = result.Root.Ligne.length; count < len; count ++) {
+            var line = result.Root.Ligne[count];
+            datum.push({
+              "lineNo" : line['NoLigne'],
+              "lineName" : nameTable[language][line['NoLigne'] - 1 ],
+              "msg" : line['msgFrancais'],
+              "normal" : ("" + line['msgFrancais']).indexOf(goodString) >= 0,
+              "normaltype": typeof ("" + line['msgFrancais']),
+              "message" : line[language]
+            });
+          }
+        } catch (err_or) {
+          logger.trace(err);
+          logger.warn("metro514.js URL had errors: " + url);
+          err = err_or;
         }
-
         var widgetTitle = config.widgetTitle;
         jobCallback(err, {title: widgetTitle, modes: datum});
       });
