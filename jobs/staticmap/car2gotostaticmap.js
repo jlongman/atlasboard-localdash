@@ -1,6 +1,7 @@
 /**
  * Created by longman on 2016-06-01.
  */
+var distance = require('./distance');
 /**
  * Job: staticmap
  * Code fragment from car2go atlasboard
@@ -25,6 +26,29 @@
  * zoom if unset google decides zoom
  */
 
+function get_close_cars(limit, config, json) {
+  const vehicles = json["placemarks"];
+  var closecars = []
+  for (var i = 0; i < vehicles.length; i++) {
+    var vehicle = vehicles[i];
+    vehicle.distance = distance.distance(vehicle.coordinates[1], vehicle.coordinates[0], config.lat, config.lon);
+    // console.log (config.loc +" - " +vehicle.distance);
+    if (vehicle.distance < limit) {
+      closecars.push(vehicle);
+    }
+  }
+  return closecars;
+}
+
+function drawcars(closecars, icon) {
+    var url = "&markers=" + icon
+
+    for (var i = 0; i < closecars.length; i++) {
+      var close = closecars[i];
+      url += "|" + distance.roundToMeter(close.coordinates[1]) + "," + distance.roundToMeter(close.coordinates[0]);
+    }
+    return url
+}
 /**
  *
  * NOTE THE CAR2GO API COORDINATES FOR LATITUDE AND LONGITUDE ARE "REVERSED"
@@ -38,38 +62,34 @@
 function car2gojson_to_static_map(limit, count, config, json) {
   // logger.trace(json);
   var url = "";
-  var vehicles = json["placemarks"];
 
-  var distance = require('./distance');
-
-  var closecars = []
-  for (var i = 0; i < vehicles.length; i++) {
-    var vehicle = vehicles[i];
-    vehicle.distance = distance.distance(vehicle.coordinates[1], vehicle.coordinates[0], config.lat, config.lon);
-    // console.log (config.loc +" - " +vehicle.distance);
-    if (vehicle.distance < limit) {
-      closecars.push(vehicle);
-    }
-  }
-
-  if (closecars.length > 0) {
-    closecars = closecars.sort(function (a, b) {
+  
+  var closecars = get_close_cars(limit, config, json);
+  closecars = closecars.sort(function (a, b) {
       return a.distance - b.distance;
-    });
+  });
+  if (closecars.length > count) {
+     closecars.length = count;
+  }
+  if (closecars.length > 0) {
+     const closeSmart = closecars.filter(function(car) {
+         return car.vin.startsWith("WME");
+     });
+
     if (config.icon) {
       if (config.icon == "" || config.icon == "default") {
-        url += "&markers=icon:" + "http://goo.gl/OXgCcL";
+        icon = "icon:" + "http://goo.gl/OXgCcL";
       } else {
-        url += "&markers=icon:" + config.icon;
+        icon = "icon:" + config.icon;
       }
     } else {
-      url += "&markers=color:blue";
+      icon = "color:blue";
     }
-
-    for (var i = 0; i < closecars.length && i < count; i++) {
-      var close = closecars[i];
-      url += "|" + distance.roundToMeter(close.coordinates[1]) + "," + distance.roundToMeter(close.coordinates[0]);
-    }
+     url += drawcars(closeSmart, icon);
+     const closeOther = closecars.filter(function(car) {
+         return !car.vin.startsWith("WME");
+     });
+     url += drawcars(closeOther, "icon:" + "http://goo.gl/LeCk5y");
   }
   return url;
 }
