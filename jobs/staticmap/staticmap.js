@@ -3,6 +3,7 @@
  * Code fragment from bixi atlastboard
  * Example Config:
  * "mystaticmap": {
+ *    "home": "yellow",
  *    "lat": 45.76727,
  *    "lon":-73.99392888,
  *    "limit": 600,
@@ -21,6 +22,7 @@
  *    }
  * }
  *
+ * home colour of home, optional
  * lat centre of map
  * lon centre of map
  * limit is radial distance in meters, optional
@@ -123,7 +125,10 @@ module.exports = {
       }
       return SP.look_cache[lookurl];
     }
-
+    var home = "yellow";
+    if (config.home) {
+        home = config.home;
+    }
     var size = "640x640";
     if (config.size) {
       size = config.size;
@@ -168,7 +173,7 @@ module.exports = {
           try {
             var json = JSON.parse(jsonp.substring(2, jsonp.length - 2));
             var urlfragment = communauto2sm.automobilejson_to_static_map(limit, count, config.communauto, json);
-            if (urlfragment.length >= 2048) {
+            if (urlfragment.length >= 8192) {
               logger.error("Long staticmap (automobile) URL fragment: (" + urlfragment.length + ") " + urlfragment);
             }
           } catch (err_or) {
@@ -195,7 +200,7 @@ module.exports = {
                 jsonp = jsonp.substring(1, jsonp.length - 1).replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2":');
                 var json = JSON.parse(jsonp);
                 var urlfragment = communauto2sm.communautojson_to_static_map(limit, count, config.communauto, json);
-                if (urlfragment.length >= 2048) {
+                if (urlfragment.length >= 8192) {
                   logger.error("Long staticmap (automobile) URL fragment: (" + urlfragment.length + ") " + urlfragment);
                 }
                 cache_response[key_cache] = urlfragment;
@@ -228,7 +233,7 @@ module.exports = {
         dependencies.easyRequest.JSON(car2gourl, function (err, json) {
           try {
             var urlfragment = car2go2sm.car2gojson_to_static_map(limit, count, config.car2go, json);
-            if (urlfragment.length >= 2048) {
+            if (urlfragment.length >= 8192) {
               logger.error("Long staticmap URL: (" + url.length + ") " + url);
             }
           } catch (err_or) {
@@ -254,7 +259,7 @@ module.exports = {
         dependencies.easyRequest.JSON(bixiurl, function (err, json) {
           try {
             var urlfragment = bixi2sm.bixijson_to_static_map(limit, count, config.bixi, json);
-            if (urlfragment.length >= 2048) {
+            if (urlfragment.length >= 8192) {
               logger.error("Long staticmap URL: (" + urlfragment.length + ") " + urlfragment);
             }
           } catch (err_or) {
@@ -284,11 +289,11 @@ module.exports = {
         if (config.maptype) {
           url += "&maptype=" + config.maptype;
         }
-        url += "&markers=color:yellow|" + config.lat + "," + config.lon + "";
+        url += "&markers=color:" + config.home + "|" + config.lat + "," + config.lon + "";
         for (var i = 0; i < results.length; i++) {
           logger.trace(i + ": " + results[i]);
           url += results[i];
-          if (url.length >= 2048) {
+          if (url.length >= 8192) {
             logger.error("Long staticmap with URL fragment: (" + i + " - " + url.length + ") " + url);
             break;
           }
