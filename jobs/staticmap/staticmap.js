@@ -147,7 +147,7 @@ module.exports = {
       } else if (config.theme) {
         theme = theme_map(config.theme);
       }
-      if (mapurllength + theme.length >= 2048) {
+      if (mapurllength + theme.length >= 8192) {
         logger.warn("Long staticmap URL with theme : (" + mapurllength + ", " + theme.length + ") " + theme);
         theme = "";
       }
