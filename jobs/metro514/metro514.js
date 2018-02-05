@@ -120,11 +120,12 @@ module.exports = {
         try {
           for (var count = 0, len = result.Root.Ligne.length; count < len; count ++) {
             var line = result.Root.Ligne[count];
-            var lineName = nameTable[language][line['NoLigne'] - 1 ];
+            var lineNumber = line['NoLigne'];
+            var lineName = nameTable[language][lineNumber - 1 ];
             datum.push({
-              "lineNo" : line['NoLigne'],
+              "lineNo" : lineNumber,
               "lineName" : lineName,
-              "lineColor" : nameTable['msgAnglais'][line['NoLigne'] - 1 ].toLowerCase(),
+              "lineColor" : nameTable['msgAnglais'][lineNumber - 1 ].toLowerCase(),
               "normal" : ("" + line['msgFrancais']).indexOf(goodString) >= 0,
               "message" : line[language],
               "link" : line_url_base[language] + lineName.toLowerCase()
